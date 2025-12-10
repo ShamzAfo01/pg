@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>UX Audit Proposal – PAYAI Network</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <style>
+    :root {
+      /* === BRAND TOKENS – EDIT THESE === */
+      --bg: #05060a;
+      --page-bg: #ffffff;
+      --accent: #5b4bff;
+      --accent-soft: rgba(91, 75, 255, 0.08);
+      --text-main: #111827;
+      --text-muted: #6b7280;
+      --border-subtle: #e5e7eb;
+      --radius-xl: 24px;
+      --shadow-elevated: 0 18px 45px rgba(15, 23, 42, 0.35);
+      --font-main: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background: radial-gradient(circle at top, #111827, #020617);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .app-shell {
+      width: 100%;
+      max-width: 1040px;
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      color: #e5e7eb;
+    }
+
+    .app-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 999px;
+      background: conic-gradient(from 180deg, var(--accent), #10b981, #0ea5e9, var(--accent));
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.6);
+    }
+
+    .brand-text {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      opacity: 0.9;
+    }
+
+    .app-header-right {
+      font-size: 13px;
+      opacity: 0.8;
+    }
+
+    .book {
+      position: relative;
+      background: radial-gradient(circle at top left, var(--accent-soft), #020617);
+      padding: 4px;
+      border-radius: calc(var(--radius-xl) + 4px);
+      box-shadow: var(--shadow-elevated);
+      overflow: hidden;
+    }
+
+    .page-frame {
+      position: relative;
+      background: var(--page-bg);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      min-height: min(640px, calc(100vh - 140px));
+      display: flex;
+      flex-direction: column;
+    }
+
+    .page {
+      position: absolute;
+      inset: 0;
+      padding: 32px 32px 72px;
+      opacity: 0;
+      transform: translateX(20px) rotateY(10deg);
+      transform-origin: left center;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      overflow-y: auto;
+    }
+
+    .page::-webkit-scrollbar {
+      width: 6px;
+    }
+    .page::-webkit-scrollbar-thumb {
+      background: #d1d5db;
+      border-radius: 999px;
+    }
+
+    .page.active {
+      position: relative;
+      opacity: 1;
+      transform: translateX(0) rotateY(0deg);
+      z-index: 2;
+    }
+
+    .page.left {
+      opacity: 0;
+      transform: translateX(-20px) rotateY(-10deg);
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      margin-bottom: 16px;
+    }
+
+    .page-title {
+      font-size: 22px;
+      line-height: 1.25;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      color: #0f172a;
+    }
+
+    .page-tag {
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .page-section {
+      margin-top: 16px;
+      margin-bottom: 10px;
+    }
+
+    .page-section h3 {
+      font-size: 15px;
+      font-weight: 650;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .page-section h4 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 8px;
+      margin-bottom: 4px;
+      color: #111827;
+    }
+
+    .page-section p {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #4b5563;
+      margin-bottom: 4px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 10px;
+    }
+
+    .pill-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .list {
+      margin-top: 4px;
+      margin-bottom: 4px;
+      padding-left: 18px;
+    }
+
+    .list li {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #4b5563;
+      margin-bottom: 3px;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+      margin-bottom: 10px;
+    }
+
+    .metric-card {
+      border-radius: 12px;
+      border: 1px solid var(--border-subtle);
+      padding: 10px 12px;
+      background: #f9fafb;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-size: 16px;
+      font-weight: 650;
+      color: #111827;
+    }
+
+    .metric-sub {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 1px;
+    }
+
+    .footer-bar {
+      position: absolute;
+      inset-inline: 0;
+      bottom: 0;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 18px 14px;
+      background: linear-gradient(
+        to top,
+        rgba(248, 250, 252, 0.98),
+        rgba(248, 250, 252, 0.9),
+        transparent
+      );
+      border-top: 1px solid rgba(229, 231, 235, 0.9);
+    }
+
+    .page-indicator {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .nav-buttons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .nav-left {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .nav-right {
+      margin-left: auto;
+    }
+
+    .btn {
+      border: none;
+      outline: none;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #e5e7eb;
+      color: #111827;
+      transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #4f46e5);
+      color: #f9fafb;
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.35);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.25);
+    }
+
+    .btn-icon {
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .chip {
+      font-size: 11px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      display: inline-block;
+      margin-left: 4px;
+    }
+
+    .note {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 12px;
+      }
+      .page {
+        padding: 20px 16px 70px;
+      }
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+      .page-title {
+        font-size: 18px;
+      }
+      .footer-bar {
+        padding-inline: 12px;
+      }
+      .nav-buttons {
+        gap: 6px;
+      }
+      .btn {
+        padding-inline: 10px;
+      }
+      .page-indicator {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="app-header-left">
+        <div class="brand-mark"></div>
+        <div>
+          <div class="brand-text">UX Audit Proposal</div>
+          <div style="font-size: 13px; opacity: 0.9;">PAYAI Network</div>
+        </div>
+      </div>
+      <div class="app-header-right">
+        Designed by [Your Name] · Design Engineer
+      </div>
+    </header>
+
+    <main class="book">
+      <div class="page-frame">
+        <!-- PAGE 1 -->
+        <section class="page active" data-page="1">
+          <div class="pill">
+            <span class="pill-dot"></span> Executive Overview
+          </div>
+          <div class="page-header">
+            <h1 class="page-title">Strengthening Human–AI Payment Experiences</h1>
+            <span class="page-tag">Page 1 · Introduction</span>
+          </div>
+
+          <div class="page-section">
+            <h3>Context</h3>
+            <p>
+              PAYAI enables autonomous agents and humans to transact securely and
+              continuously. The protocol is powerful, but the current website
+              experience limits comprehension, conversion, and adoption. Most of
+              the language and interaction is optimised for protocol insiders,
+              not for the people who need to trust and use it.
+            </p>
+          </div>
+
+          <div class="page-section">
+            <h3>Objective</h3>
+            <p>
+              This engagement focuses on a UX audit and redesign of the PAYAI
+              web experience. The goal is to translate a complex AI-first
+              payment protocol into a clear, human-first interface that also
+              remains machine-friendly for autonomous agents.
+            </p>
+          </div>
+
+          <div class="page-section">
+            <h3>What This Proposal Covers</h3>
+            <ul class="list">
+              <li>Current performance snapshot and interpretation</li>
+              <li>UX issues identified across messaging and interaction</li>
+              <li>Persona strategy for an AI-first payments product</li>
+              <li>AI-optimised UX recommendations (design + content)</li>
+              <li>Execution roadmap with design and engineering steps</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- PAGE 2 -->
+        <section class="page" data-page="2">
+          <div class="pill">
+            <span class="pill-dot"></span> Current Performance
+          </div>
+          <div class="page-header">
+            <h1 class="page-title">Where PAYAI Stands Today</h1>
+            <span class="page-tag">Page 2 · Analytics Snapshot</span>
+          </div>
+
+          <div class="page-section">
+            <h3>Traffic & Engagement</h3>
+            <p>
+              Based on recent analytics, PAYAI receives a focused but under-
+              leveraged stream of visitors. The following metrics are from the
+              latest SimilarWeb report:
+            </p>
+            <div class="metrics-grid">
+              <div class="metric-card">
+                <div class="metric-label">Monthly Visits</div>
+                <div class="metric-value">21,288</div>
+                <div class="metric-sub">Global, latest month</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">Device Mix</div>
+                <div class="metric-value">83.5% mobile</div>
+                <div class="metric-sub">16.5% desktop</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">Bounce Rate</div>
+                <div class="metric-value">51.6%</div>
+                <div class="metric-sub">High early drop-off</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">Pages / Visit</div>
+                <div class="metric-value">1.94</div>
+                <div class="metric-sub">Shallow engagement</div>
+              </div>
+            </div>
+            <p class="note">
+              Interpretation: strong curiosity, weak comprehension. The site
+              attracts visitors but fails to convert attention into understanding
+              and deeper exploration.  [oai_citation:0‡Website_Analysis_&_Insights.Nov_2025.pdf](sediment://file_0000000009d0722fb3cf0a17b9bc1d99)
+            </p>
+          </div>
+
+          <div class="page-section">
+            <h3>Audience & Channels</h3>
+            <p>
+              Traffic is concentrated in the United States, France, and
+              Indonesia, with a heavy share coming from social channels, 
+              particularly X/Twitter. This indicates a crypto- and AI-native
+              audience that still expects clear, fintech-grade UX patterns.
+            </p>
+            <ul class="list">
+              <li>Majority traffic: United States, followed by France & Indonesia</li>
+              <li>High share from Social (X/Twitter) and Direct traffic</li>
+              <li>Relatively low Organic Search visibility, suggesting unclear SEO semantics</li>
+            </ul>
+          </div>
+
+          <div class="page-section">
+            <h3>Key Insight</h3>
+            <p>
+              The protocol is interesting enough to pull users in, but the
+              website does not explain the product clearly or guide visitors
+              through to an “I understand and want to try this” moment—especially
+              on mobile, where most of the audience lives.
+            </p>
+          </div>
+        </section>
+
+        <!-- PAGE 3 -->
+        <section class="page" data-page="3">
+          <div class="pill">
+            <span class="pill-dot"></span> UX Problems Identified
+          </div>
+          <div class="page-header">
+            <h1 class="page-title">Where the Current Experience Breaks</h1>
+            <span class="page-tag">Page 3 · Audit Summary</span>
+          </div>
+
+          <div class="page-section">
+            <h3>1. Human Comprehension Gap</h3>
+            <p>
+              The current messaging reads as if the primary audience is the
+              protocol itself or seasoned agents—not humans. Concepts such as
+              autonomous agents, payment codes, and protocol states are not
+              translated into everyday language that gives users confidence.
+            </p>
+          </div>
+
+          <div class="page-section">
+            <h3>2. Visual Language & Iconography</h3>
+            <p>
+              The illustrations and icons are visually appealing but largely
+              decorative. They don’t explain what actions the user can take or
+              how the payment journey unfolds from intent to confirmation.
+            </p>
+          </div>
+
+          <div class="page-section">
+            <h3>3. Weak Information Hierarchy</h3>
+            <p>
+              Key questions—“What does this do?”, “Why should I trust it?”,
+              “What happens next?”—are not answered in a clear hierarchy.
+              Benefits, proof, and next steps are buried in abstract language.
+            </p>
+          </div>
+
+          <div class="page-section">
+            <h3>4. Missing Onboarding & State Feedback</h3>
+            <p>
+              There is no guided path for a first-time visitor to understand how
+              agents transact on their behalf. Errors are reported as codes
+              (e.g., 42) instead of meaningful explanations such as “Payment
+              authorisation incomplete”.
+            </p>
+          </div>
+
+          <div class="page-section">
+            <h3>5. Mobile Experience Gaps</h3>
+            <p>
+              With more than four out of five visits coming from mobile, the
+              layout, typography, and controls need to be engineered as
+              mobile-first experiences, not shrunk desktop views.
+            </p>
+          </div>
+        </section>
+
+        <!-- PAGE 4 -->
+        <section class="page" data-page="4">
+          <div class="pill">
+            <span class="pill-dot"></span> Persona Strategy
+          </div>
+          <div class="page-header">
+            <h1 class="page-title">Designing for Humans in an AI-First System</h1>
+            <span class="page-tag">Page 4 · Personas</span>
+          </div>
+
+          <div class="page-section">
+            <h3>Primary Persona: The Human Operator</h3>
+            <p>
+              A tech-forward user who is comfortable with automation,
+              crypto-adjacent tools, and AI products, but who still makes
+              decisions based on clarity, trust, and predictable outcomes.
+            </p>
+            <ul class="list">
+              <li>Wants to automate payments without losing control</li>
+              <li>Needs transparent explanations of what the agent will do</li>
+              <li>Responds to clear visuals, step-by-step flows, and friendly copy</li>
+              <li>Is unlikely to tolerate opaque errors or unexplained failures</li>
+            </ul>
+          </div>
+
+          <div class="page-section">
+            <h3>Secondary (Internal) Persona: The Autonomous Agent</h3>
+            <p>
+              A conceptual persona representing the AI systems interacting with
+              PAYAI. While not human, its needs shape the way the product is
+              structured and documented.
+            </p>
+            <ul class="list">
+              <li>Requires predictable state transitions and stable endpoints</li>
+              <li>Performs best when UI states map cleanly to backend states</li>
+              <li>Benefits from semantic HTML and structured data for crawling</li>
+            </ul>
+            <p class="note">
+              The public UX will be centred on the human operator. The agent
+              persona is used internally to validate that design changes do not
+              break automated flows.
+            </p>
+          </div>
+        </section>
+
+        <!-- PAGE 5 -->
+        <section class="page" data-page="5">
+          <div class="pill">
+            <span class="pill-dot"></span> Recommendations
+          </div>
+          <div class="page-header">
+            <h1 class="page-title">AI-Optimised UX: Key Recommendations</h1>
+            <span class="page-tag">Page 5 · Design & Content</span>
+          </div>
+
+          <div class="page-section">
+            <h3>1. Human-First Messaging</h3>
+            <ul class="list">
+              <li>Rewrite the homepage and core flows in benefit-led language.</li>
+              <li>Introduce a short “What is an autonomous payment agent?” explainer.</li>
+              <li>Add inline tooltips for any protocol-level terminology.</li>
+            </ul>
+          </div>
+
+          <div class="page-section">
+            <h3>2. Visual & Interaction System</h3>
+            <ul class="list">
+              <li>
+                Replace abstract visuals with diagrams that show the payment
+                journey: human → agent → network → confirmation.
+              </li>
+              <li>
+                Standardise iconography so each icon has a clear semantic meaning.
+              </li>
+              <li>
+                Introduce micro-interactions that confirm state changes in real time.
+              </li>
+            </ul>
+          </div>
+
+          <div class="page-section">
+            <h3>3. Mobile-First Layout</h3>
+            <ul class="list">
+              <li>Re-engineer spacing, headings, and CTAs for small screens.</li>
+              <li>Use sticky bottom actions for key flows.</li>
+              <li>Optimise loading and content density to minimise bounce.</li>
+            </ul>
+          </div>
+
+          <div class="page-section">
+            <h3>4. Agent & SEO Optimisation</h3>
+            <ul class="list">
+              <li>Use semantic HTML and structured data to support AI and search agents.</li>
+              <li>Align UI states with API states for predictable automation.</li>
+              <li>Define an error dictionary that maps codes to human-readable explanations.</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- PAGE 6 -->
+        <section class="page" data-page="6">
+          <div class="pill">
+            <span class="pill-dot"></span> Roadmap & Next Steps
+          </div>
+          <div class="page-header">
+            <h1 class="page-title">Execution Plan & Collaboration Model</h1>
+            <span class="page-tag">Page 6 · Implementation</span>
+          </div>
+
+          <div class="page-section">
+            <h3>Phase 1 — Foundations (Weeks 1–2)</h3>
+            <ul class="list">
+              <li>Detailed UX audit of existing pages and flows</li>
+              <li>Copy and information architecture redesign</li>
+              <li>Low-fidelity wireframes for key journeys (web & mobile)</li>
+            </ul>
+          </div>
+
+          <div class="page-section">
+            <h3>Phase 2 — Experience Design (Weeks 2–4)</h3>
+            <ul class="list">
+              <li>High-fidelity UI for homepage, flows, and dashboard</li>
+              <li>Visual system for diagrams, icons, and error states</li>
+              <li>Interactive prototype to validate the new experience</li>
+            </ul>
+          </div>
+
+          <div class="page-section">
+            <h3>Phase 3 — Design Engineering (Weeks 4–6)</h3>
+            <ul class="list">
+              <li>Partner with engineering team to implement front-end changes</li>
+              <li>Review performance, accessibility, and mobile behaviour</li>
+              <li>Ensure UI states map cleanly to API behaviour</li>
+            </ul>
+          </div>
+
+          <div class="page-section">
+            <h3>Phase 4 — Testing & Optimisation (Weeks 6–7)</h3>
+            <ul class="list">
+              <li>Human comprehension tests with target users</li>
+              <li>AI/agent crawl tests for structured data and state predictability</li>
+              <li>Iteration based on findings and agreed KPIs</li>
+            </ul>
+          </div>
+
+          <div class="page-section">
+            <h3>Engagement Model</h3>
+            <p>
+              I will act as a design engineer and UX lead—owning the end-to-end
+              experience while collaborating closely with your internal
+              engineering team to ensure that design decisions translate into
+              shipped, measurable improvements.
+            </p>
+          </div>
+        </section>
+
+        <!-- FOOTER NAV -->
+        <div class="footer-bar">
+          <div class="nav-buttons">
+            <div class="nav-left">
+              <button id="prevBtn" class="btn" disabled>
+                <span class="btn-icon">←</span>
+                Previous
+              </button>
+              <span class="page-indicator" id="pageIndicator">Page 1 of 6</span>
+            </div>
+            <div class="nav-right">
+              <button id="nextBtn" class="btn btn-primary">
+                Next
+                <span class="btn-icon">→</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    (function () {
+      const pages = Array.from(document.querySelectorAll(".page"));
+      const prevBtn = document.getElementById("prevBtn");
+      const nextBtn = document.getElementById("nextBtn");
+      const pageIndicator = document.getElementById("pageIndicator");
+
+      let currentPage = 1;
+      const totalPages = pages.length;
+
+      function updatePages(target) {
+        currentPage = target;
+        pages.forEach((page) => {
+          const index = Number(page.dataset.page);
+          page.classList.remove("active", "left");
+          if (index === currentPage) {
+            page.classList.add("active");
+          } else if (index < currentPage) {
+            page.classList.add("left");
+          }
+        });
+
+        // Update controls
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages;
+
+        nextBtn.textContent = currentPage === totalPages ? "End of Proposal" : "Next";
+        if (currentPage !== totalPages) {
+          nextBtn.innerHTML = 'Next<span class="btn-icon">→</span>';
+        }
+
+        pageIndicator.textContent = `Page ${currentPage} of ${totalPages}`;
+      }
+
+      prevBtn.addEventListener("click", () => {
+        if (currentPage > 1) updatePages(currentPage - 1);
+      });
+
+      nextBtn.addEventListener("click", () => {
+        if (currentPage < totalPages) updatePages(currentPage + 1);
+      });
+
+      // Optional: keyboard navigation
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight") nextBtn.click();
+        if (e.key === "ArrowLeft") prevBtn.click();
+      });
+    })();
+  </script>
+</body>
+</html>
